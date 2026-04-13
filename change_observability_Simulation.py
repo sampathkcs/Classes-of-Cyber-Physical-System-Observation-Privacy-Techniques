@@ -1,8 +1,11 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 # Final Unified Simulation – JSD for Unobservable + Attacker Observable + Combined Path Figure
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import networkx as nx
@@ -19,6 +22,10 @@ LABEL_FONTSIZE  = 13   # axis labels
 TICK_FONTSIZE   = 11   # tick labels
 CELL_FONTSIZE   = 10   # numbers inside heatmap cells
 LEGEND_FONTSIZE = 10   # legend text size
+
+# Do not generate Type 3 fonts
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
 
 # --- Setup ---
 rng = np.random.default_rng()  # fixed seed for consistency
@@ -44,7 +51,7 @@ edges = [
     ("V13", "V10"), ("V13", "V14"),
     ("V14", "V11"), ("V14", "V13"), ("V14", "V12")
 ]
-G = nx.DiGraph()
+G: nx.DiGraph[str] = nx.DiGraph()
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
 
@@ -61,7 +68,7 @@ print("Start locations")
 print(USER_START_LOCATION)
 
 # --- Journey simulation ---
-def decide_stop(uid, t, current: str) -> str:
+def decide_stop(current: str) -> str:
     neighbours = list(G.successors(current))
     if not neighbours:
         neighbours = [n for n in nodes if n != current]
@@ -72,8 +79,8 @@ def simulate_journeys() -> list[list[str]]:
     for uid in range(NUM_USERS):
         path = [USER_START_LOCATION[uid]]
         current = path[0]
-        for t in range(1, JOURNEY_LENGTH):
-            current = decide_stop(uid, t, current)
+        for _t in range(1, JOURNEY_LENGTH):
+            current = decide_stop(current)
             path.append(current)
         journeys.append(path)
     return journeys

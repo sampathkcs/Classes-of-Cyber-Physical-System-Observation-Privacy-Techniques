@@ -1,16 +1,20 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 ############################### Final Simulation  (No Forced Return)################################
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 from scipy.spatial.distance import jensenshannon
 from collections import Counter
 import random
-import seaborn as sns
-import pandas as pd
-from pprint import pprint
 import copy
+
+# Do not generate Type 3 fonts
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
 
 # Define the graph using adjacency list for 14-node transit network
 edges = [
@@ -31,14 +35,14 @@ edges = [
 ]
 
 rng = random.Random(0)
-G = nx.DiGraph()
+G: nx.DiGraph[str] = nx.DiGraph()
 G.add_edges_from(edges)
 
 NUM_EXPERIMENTS = 1000
 JOURNEY_LENGTH = 10
 NUM_USERS = 10
 
-def make_user_starts(g: nx.DiGraph, start: int, count: int, location: str) -> dict[int, str]:
+def make_user_starts(g: nx.DiGraph[str], start: int, count: int, location: str) -> dict[int, str]:
     nodes = list(g.nodes())
     return {
         i: location if location != "random" else rng.choice(nodes)
@@ -53,25 +57,25 @@ USER_START_LOCATION = (
 
 assert len(USER_START_LOCATION) == NUM_USERS
 
-def decide_stop(g, uid, t, current):
+def decide_stop(g: nx.DiGraph[str], uid: int) -> str:
     node_choices = list(set(g.nodes()) - {USER_START_LOCATION[uid]})
     return rng.choice(node_choices)
 
-def simulate_journeys(G):
-    users_path = []
+def simulate_journeys(g: nx.DiGraph[str]):
+    users_path: list[list[str]] = []
     for uid in range(NUM_USERS):
         start = USER_START_LOCATION[uid]
         path = [start]
         current = start
-        for t in range(1, JOURNEY_LENGTH):
-            current = decide_stop(G, uid, t, current)
+        for _t in range(1, JOURNEY_LENGTH):
+            current = decide_stop(g, uid)
             path.append(current)
         users_path.append(path)
     return users_path
 
-def simulate_swaps(g, users_path):
+def simulate_swaps(g: nx.DiGraph[str], users_path: list[list[str]]):
     users_path_swapped = copy.deepcopy(users_path)
-    def swap_at_t(t, node, uids):
+    def swap_at_t(t: int, uids: set[int]):
         available = list(uids)
         while len(available) >= 2:
             uid1, uid2 = rng.sample(available, 2)
@@ -86,14 +90,14 @@ def simulate_swaps(g, users_path):
                    if users_path[uid][t] == node and uid != 0}
             for node in g.nodes()
         }
-        for node, uids in user_locations.items():
+        for _node, uids in user_locations.items():
             if len(uids) > 1:
-                swap_at_t(t, node, uids)
+                swap_at_t(t, uids)
     return users_path_swapped
 
-def journeys_to_counts(g, experiments):
+def journeys_to_counts(g: nx.DiGraph[str], experiments: list[list[list[str]]]):
     users_dist = [
-        [Counter({n: 0 for n in g.nodes()}) for _ in range(JOURNEY_LENGTH)]
+        [Counter[str]({n: 0 for n in g.nodes()}) for _ in range(JOURNEY_LENGTH)]
         for _ in range(NUM_USERS)
     ]
     for experiment in experiments:
@@ -102,7 +106,7 @@ def journeys_to_counts(g, experiments):
                 users_dist[uid][i][journey[i]] += 1
     return users_dist
 
-def counts_to_dist(journeys_counts):
+def counts_to_dist(journeys_counts: list[list[Counter[str]]]):
     return [
         [{k: v / NUM_EXPERIMENTS for (k, v) in counts.items()} for counts in j]
         for j in journeys_counts
@@ -163,8 +167,8 @@ for i in range(NUM_USERS):
 # Top scenario header (kept bold)
 
 
-plt.tight_layout(rect=[0, 0, 1, 0.96])
-plt.savefig("jsd_cardswap_heatmap.pdf", bbox_inches='tight')
-plt.show()
+fig.tight_layout(rect=(0, 0, 1, 0.96))
+fig.savefig("jsd_cardswap_heatmap.pdf", bbox_inches='tight')
+plt.close(fig)
 
 print("Saved: jsd_cardswap_heatmap.pdf")
