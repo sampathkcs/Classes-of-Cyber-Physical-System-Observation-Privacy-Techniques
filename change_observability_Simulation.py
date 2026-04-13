@@ -28,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 
 # --- Setup ---
-rng = np.random.default_rng()  # fixed seed for consistency
+rng = np.random.default_rng(0)  # fixed seed for consistency
 NUM_USERS = 10
 JOURNEY_LENGTH = 10
 NUM_EXPERIMENTS = 10000
@@ -121,7 +121,7 @@ def simulate_full_experiments():
 journeys_full = simulate_full_experiments()
 
 # --- Masked version for unobservable JSD (random replacement) ---
-def simulate_masked_for_jsd(journeys_full, obs_mask) -> list[list[list[str]]]:
+def simulate_masked_for_jsd(journeys_full: list[list[list[str]]], obs_mask) -> list[list[list[str]]]:
     """Random replacement for hidden steps for statistical masking."""
     journeys_masked = copy.deepcopy(journeys_full)
     for exp in journeys_masked:
