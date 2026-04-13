@@ -432,7 +432,7 @@ leg = fig.legend(
     borderpad=0.2
 )
 
-plt.subplots_adjust(bottom=0.14)   # tighter gap to the legend
+plt.subplots_adjust(bottom=0.08)   # tighter gap to the legend
 plt.savefig("Journeys_F5.pdf", bbox_inches='tight')
 plt.close()
 
